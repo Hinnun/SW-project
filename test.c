@@ -187,6 +187,7 @@ void Midi_AllChannelSoundOff(HMIDIOUT m_DevOutHandle)
 
 //---------------------------------------------------------------------------------
 
+//--------------Board
 #define MAX_X 40
 #define MAX_Y 20
 #define MIN_X 8
@@ -198,6 +199,19 @@ void Midi_AllChannelSoundOff(HMIDIOUT m_DevOutHandle)
 #define MAX_BLOCK 16
 #define ACTIVE_BLOCK 1
 #define INACTIVE_BLOCK 0
+
+
+int arr[MAX_BLOCK][MAX_BLOCK] = { 0, };
+int column = 0;
+int row = 0;
+
+//--------------Sound
+int note[] = { 27, 25, 24, 22, 20, 18, 17, 15, 13, 12, 10, 8, 6, 5, 3, 1 };
+int volume = 50;
+int highsound = -1;
+int speed = 100;
+
+//--------------Cursor
 
 typedef enum { NOCURSOR, SOLIDCURSOR, NORMALCURSOR } CURSOR_TYPE;
 void setcursortype(CURSOR_TYPE c) { //커서숨기는 함수 
@@ -221,27 +235,20 @@ void setcursortype(CURSOR_TYPE c) { //커서숨기는 함수
 	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &CurInfo);
 }
 
-int arr[MAX_BLOCK][MAX_BLOCK] = { 0, };
-int column = 0;
-int row = 0;
-
-int note[] = { 27, 25, 24, 22, 20, 18, 17, 15, 13, 12, 10, 8, 6, 5, 3, 1 };
-int highsound = -1;
-int speed = 100;
-
 int x = MIN_X;
 int y = MIN_Y;
 int mouse_x = MIN_X;
 
-
+//--------------Move cursor
 void gotoxy(int x, int y) {
 	COORD Pos = { x, y };
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Pos);
 }
 
+//--------------draw Interface and Imformation
 void drawMap()
 {
-	int ly = 1;
+	int ly = 1;		// line
 	gotoxy(INTERFACE_X, INTERFACE_Y); printf("		   >>HOW TO PLAY<<\n");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   -   MOVE   :   ◁ ▷, △ ▽, q");
@@ -252,13 +259,15 @@ void drawMap()
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   -   CLEAR  :   C");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   SPEED UP / DOWN  : A / D");
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   VOLUME UP / DOWN  : Z / X");
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   SPEED UP / DOWN   : A / D");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   HIGHT SOUND UP / DOWN  :  W / S");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l___________________________________________");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   HIGHT SOUND = %4d", highsound);
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   SPEED = %4d", speed);
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   HIGH SOUND = %4d", highsound);
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   SPEED      = %4d", speed);
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   VOLUME     = %4d", volume);
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   x = %4d      mouse_x = %4d", x, mouse_x);
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l	          mouse_y = %4d", y);
@@ -268,7 +277,8 @@ void drawMap()
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l___________________________________________");
 }
 
-void drawBorad()
+//--------------draw Board
+void drawBoard()
 {
 	for (int i = 0; i < MAX_BLOCK; i++) {
 		for (int j = 0; j < MAX_BLOCK; j++) {
@@ -287,7 +297,8 @@ void drawBorad()
 	}
 }
 
-void makeSound() //
+//--------------blow Sound
+void makeSound()
 {
 	int mu[MAX_BLOCK] = { 0, };
 
@@ -301,12 +312,13 @@ void makeSound() //
 		printf("%d ", mu[column]);
 
 		if (arr[row][column] == ACTIVE_BLOCK) {
-			Midi_SendShortMsg(m_DevHandle, 0x90, (BYTE)(0x30 + note[column] + highsound), 50);
+			Midi_SendShortMsg(m_DevHandle, 0x90, (BYTE)(0x30 + note[column] + highsound), volume);
 		}
 	}
 	if (++row == MAX_BLOCK)	row = 0;
 }
 
+//--------------Clear board
 void clear()
 {
 	for (int i = 0; i < MAX_BLOCK; i++)
@@ -314,6 +326,7 @@ void clear()
 			arr[i][j] = INACTIVE_BLOCK;
 }
 
+//--------------Random board
 void random()
 {
 	srand(time(NULL));
@@ -343,28 +356,28 @@ void random()
 	}
 }
 
-checkKey()
+//--------------Kb
+void checkKey()
 {
 	int chr;
-
 
 	if (_kbhit()) {
 		chr = _getch();
 		if (chr == 0 || chr == 0xe0) {
 			do { chr = _getch(); } while (chr == 224);
-			if (chr == 72) {
+			if (chr == 72) {			// down
 				y--;
 				if (y < MIN_Y) {
 					y = MIN_Y;
 				}
 			}
-			else if (chr == 80) {
+			else if (chr == 80) {		// up
 				y++;
 				if (y > MAX_Y - 1) {
 					y = MAX_Y - 1;
 				}
 			}
-			else if (chr == 75) {
+			else if (chr == 75) {		// left
 				x--;
 				mouse_x -= 2;
 				if (mouse_x < MIN_X) {
@@ -372,7 +385,7 @@ checkKey()
 					x = MIN_X;
 				}
 			}
-			else if (chr == 77) {
+			else if (chr == 77) {		// right
 				x++;
 				mouse_x += 2;
 				if (mouse_x > MAX_X - 2) {
@@ -388,41 +401,48 @@ checkKey()
 			else if (arr[x - MIN_X][y - MIN_Y] == INACTIVE_BLOCK)
 				arr[x - MIN_X][y - MIN_Y] = ACTIVE_BLOCK;
 		}
-		else if (chr == 113)						// q
+		else if (chr == 113)						// q	Center
 		{
 			x = 16;
 			mouse_x = 24;
 			y = 12;
 		}
-		else if (chr == 114)						// r
+		else if (chr == 114)						// r	Clear and Random
 		{
 			clear();
 			random();
 		}
-		else if (chr == 97 || chr == 100) {			// a d
-			speed = (chr == 100) ? speed + 5 : speed - 5;
-			if (speed > 200)
+		else if (chr == 97 || chr == 100) {			// a d	Speed
+			speed = (chr == 97) ? speed + 5 : speed - 5;
+			if (200 - speed > 195)
+				speed = 5;
+			else if (200 - speed < 0)
 				speed = 200;
-			else if (speed < 40)
-				speed = 40;
 		}
-		else if (chr == 115 || chr == 119) {		// s w
+		else if (chr == 122 || chr == 120) {		// z x	Volume
+			volume = (chr == 122) ? volume + 5 : volume - 5;
+			if (volume > 100)
+				volume = 100;
+			else if (volume < 10)
+				volume = 10;
+		}
+		else if (chr == 115 || chr == 119) {		// s w	Highsound
 			(chr == 119) ? highsound ++ : highsound --;
 			if (highsound > 8)
 				highsound = 8;
 			else if (highsound < -4)
 				highsound = -4;
 		}
-		else if(chr == 99)							// c
+		else if(chr == 99)							// c	Clear
 			clear();
-		else if (chr == 101)						// e
+		else if (chr == 101)						// e	Exit
 			exit(1);
 	}
 
-	while (_kbhit()) _getch();
+	while (_kbhit()) _getch();		// Erase Buffer
 }
 
-
+//--------------Main
 int main() {
 
 	m_DevHandle = Midi_Open(0);
@@ -435,18 +455,19 @@ int main() {
 
 	setcursortype(NOCURSOR);
 
-
+	// Running
 	while (1) {
 
 		makeSound();
 		checkKey();
 
-		drawBorad();
+		drawBoard();
 		drawMap();
 
-		Sleep(speed);
+		Sleep( 200 - speed);    // Speed
 	}
 
+	// Close Midi
 	Midi_AllChannelSoundOff(m_DevHandle);
 	Midi_Close(m_DevHandle);
 
