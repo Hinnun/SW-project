@@ -187,15 +187,8 @@ void Midi_AllChannelSoundOff(HMIDIOUT m_DevOutHandle)
 
 //---------------------------------------------------------------------------------
 
-//--------------Board
-#define MAX_X 40
-#define MAX_Y 20
-#define MIN_X 8
-#define MIN_Y 4
 
-#define INTERFACE_X 50
-#define INTERFACE_Y 2
-
+//--------------Block
 #define MAX_BLOCK 16
 #define ACTIVE_BLOCK 1
 #define INACTIVE_BLOCK 0
@@ -204,6 +197,16 @@ void Midi_AllChannelSoundOff(HMIDIOUT m_DevOutHandle)
 int arr[MAX_BLOCK][MAX_BLOCK] = { 0, };
 int column = 0;
 int row = 0;
+
+//--------------Board
+#define MAX_X 40
+#define MAX_Y 20 
+#define MIN_X 8
+#define MIN_Y 4
+
+#define INTERFACE_X 50
+#define INTERFACE_Y 2
+
 
 //--------------Sound
 int note[] = { 27, 25, 24, 22, 20, 18, 17, 15, 13, 12, 10, 8, 6, 5, 3, 1 };
@@ -255,27 +258,26 @@ void drawMap()
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   -   ACTIVE  or  INACTIVE : SPACE BAR");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   -   RANDOM :   R");
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   -   RANDOM :   r");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   -   CLEAR  :   C");
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   -   CLEAR  :   c");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   VOLUME UP / DOWN  : Z / X");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   SPEED UP / DOWN   : A / D");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   HIGHT SOUND UP / DOWN  :  W / S");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   VOLUME UP / DOWN  : z / x");
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   SPEED UP / DOWN   : a / d");
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   *   HIGHT SOUND UP / DOWN  :  w / s");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l___________________________________________");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   HIGH SOUND = %4d", highsound);
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   HIGH SOUND = %4d - 1", highsound + 1);
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   SPEED      = %4d", speed);
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   VOLUME     = %4d", volume);
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l   x = %4d      mouse_x = %4d", x, mouse_x);
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l	          mouse_y = %4d", y);
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l");
-	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l			    EXIT   :   E");
+	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l			    EXIT   :   e");
 	gotoxy(INTERFACE_X, INTERFACE_Y + ly++); printf("	l___________________________________________");
 }
+
 
 //--------------draw Board
 void drawBoard()
@@ -331,7 +333,7 @@ void random()
 {
 	srand(time(NULL));
 	int a[MAX_BLOCK] = { 0, };
-	int n = rand()%((MAX_BLOCK * MAX_BLOCK - 126) - 69) + 70;
+	int n = rand() % ((MAX_BLOCK * MAX_BLOCK - 126) - 69) + 70;
 
 
 
@@ -427,13 +429,13 @@ void checkKey()
 				volume = 10;
 		}
 		else if (chr == 115 || chr == 119) {		// s w	Highsound
-			(chr == 119) ? highsound ++ : highsound --;
+			(chr == 119) ? highsound++ : highsound--;
 			if (highsound > 8)
 				highsound = 8;
 			else if (highsound < -4)
 				highsound = -4;
 		}
-		else if(chr == 99)							// c	Clear
+		else if (chr == 99)							// c	Clear
 			clear();
 		else if (chr == 101)						// e	Exit
 			exit(1);
@@ -464,7 +466,7 @@ int main() {
 		drawBoard();
 		drawMap();
 
-		Sleep( 200 - speed);    // Speed
+		Sleep(200 - speed);    // Speed
 	}
 
 	// Close Midi
